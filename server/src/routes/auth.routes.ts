@@ -1,8 +1,8 @@
-import { loginSchema } from '@brewlog/shared';
+import { changeOwnPasswordSchema, loginSchema, updateOwnProfileSchema } from '@brewlog/shared';
 import { eq } from 'drizzle-orm';
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { verifyPassword } from '../auth/password.js';
+import { hashPassword, verifyPassword } from '../auth/password.js';
 import { db } from '../db/client.js';
 import { users } from '../db/schema.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -79,6 +79,60 @@ router.post('/logout', (req, res) => {
 
 router.get('/me', requireAuth, (req, res) => {
   res.json({ user: req.user });
+});
+
+router.patch('/me', requireAuth, (req, res) => {
+  const parsed = updateOwnProfileSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.flatten() });
+    return;
+  }
+
+  const updated = db
+    .update(users)
+    .set({ displayName: parsed.data.displayName, updatedAt: new Date().toISOString() })
+    .where(eq(users.id, req.user!.id))
+    .returning()
+    .get();
+
+  res.json({
+    user: {
+      id: updated.id,
+      username: updated.username,
+      displayName: updated.displayName,
+      role: updated.role,
+    },
+  });
+});
+
+router.post('/change-password', requireAuth, (req, res) => {
+  const parsed = changeOwnPasswordSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.flatten() });
+    return;
+  }
+
+  const user = db.select().from(users).where(eq(users.id, req.user!.id)).get();
+  if (!user) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+
+  verifyPassword(user.passwordHash, parsed.data.currentPassword)
+    .then((valid) => {
+      if (!valid) {
+        res.status(400).json({ error: 'Current password is incorrect' });
+        return;
+      }
+      return hashPassword(parsed.data.newPassword).then((passwordHash) => {
+        db.update(users)
+          .set({ passwordHash, updatedAt: new Date().toISOString() })
+          .where(eq(users.id, user.id))
+          .run();
+        res.json({ ok: true });
+      });
+    })
+    .catch(() => res.status(500).json({ error: 'Failed to change password' }));
 });
 
 export default router;
