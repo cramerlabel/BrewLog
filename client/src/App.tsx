@@ -2,8 +2,10 @@ import { Route, Routes } from 'react-router-dom';
 import { RequireAdmin, RequireAuth } from '@/auth/route-guards';
 import { AppShell } from '@/components/layout/AppShell';
 import { AccountPage } from '@/pages/AccountPage';
+import { BatchDetailPage } from '@/pages/BatchDetailPage';
 import { EditRecipePage } from '@/pages/EditRecipePage';
 import { LoginPage } from '@/pages/LoginPage';
+import { NewBatchPage } from '@/pages/NewBatchPage';
 import { NewRecipePage } from '@/pages/NewRecipePage';
 import { RecipeDetailPage } from '@/pages/RecipeDetailPage';
 import { RecipesPage } from '@/pages/RecipesPage';
@@ -18,6 +20,8 @@ function App() {
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
           <Route index element={<SummaryPage />} />
+          <Route path="batches/new" element={<NewBatchPage />} />
+          <Route path="batches/:id" element={<BatchDetailPage />} />
           <Route path="recipes" element={<RecipesPage />} />
           <Route path="recipes/new" element={<NewRecipePage />} />
           <Route path="recipes/:id" element={<RecipeDetailPage />} />

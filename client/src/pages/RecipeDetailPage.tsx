@@ -76,8 +76,8 @@ export function RecipeDetailPage() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" disabled title="Batches arrive in Phase 4">
-            Start batch
+          <Button variant="outline" asChild>
+            <Link to={`/batches/new?recipeId=${recipe.id}`}>Start batch</Link>
           </Button>
           {canEdit && (
             <>
