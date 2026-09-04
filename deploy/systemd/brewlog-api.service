@@ -1,0 +1,30 @@
+# BrewLog API systemd unit.
+#
+# Install: copy to /etc/systemd/system/brewlog-api.service, then:
+#   systemctl daemon-reload
+#   systemctl enable --now brewlog-api
+# See the "Deployment" section in README.md for the full runbook (user/dir setup, build, migrate).
+
+[Unit]
+Description=BrewLog API (Node/Express)
+After=network.target
+
+[Service]
+Type=simple
+User=brewlog
+Group=brewlog
+WorkingDirectory=/opt/brewlog/server
+EnvironmentFile=/opt/brewlog/server/.env
+ExecStart=/usr/bin/node dist/index.js
+Restart=on-failure
+RestartSec=5
+
+# Hardening - the process only needs to read its own code and write to data/ and uploads/.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/brewlog/server/data /opt/brewlog/server/uploads
+
+[Install]
+WantedBy=multi-user.target

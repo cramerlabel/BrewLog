@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ErrorState } from '@/components/ErrorState';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { STATUS_LABELS, STATUS_OPTIONS } from '@/features/batches/status';
 import { useBatches } from '@/features/batches/hooks';
+import { ApiError } from '@/lib/api-client';
 
 const PAGE_SIZE = 20;
 
@@ -17,7 +19,7 @@ export function SummaryPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useBatches({
+  const { data, isLoading, isError, error, refetch } = useBatches({
     status,
     type: type === 'all' ? undefined : type,
     search: search || undefined,
@@ -92,11 +94,18 @@ export function SummaryPage() {
         </div>
       )}
 
-      {!isLoading && data?.batches.length === 0 && (
+      {isError && (
+        <ErrorState
+          message={error instanceof ApiError ? error.message : 'Failed to load batches.'}
+          onRetry={() => void refetch()}
+        />
+      )}
+
+      {!isLoading && !isError && data?.batches.length === 0 && (
         <p className="text-muted-foreground">No batches found.</p>
       )}
 
-      {!isLoading && data && data.batches.length > 0 && (
+      {!isLoading && !isError && data && data.batches.length > 0 && (
         <div className="space-y-2">
           {data.batches.map((batch) => (
             <Link

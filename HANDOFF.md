@@ -7,8 +7,9 @@ Batches are private — visible/editable only by their owner or an admin. Self-h
 server behind nginx; auth, sessions, and file storage are all local (no external services).
 
 ## Current phase
-Phases 0–4 complete (foundation, backend auth core, frontend shell, recipes, batches/summary).
-Next phase: **Phase 5 — Settings / Admin** (user management + Actions-list management UI).
+Phases 0–6 complete (foundation, backend auth core, frontend shell, recipes, batches/summary,
+settings/admin UI, polish/deploy).
+Next phase: **Phase 7 — Cellar Inventory** (planning only so far).
 
 ## Completed
 - **Phase 0**: npm-workspaces monorepo (`client`/`server`/`shared`), ESLint+Prettier, `.gitignore`, GitHub
@@ -26,20 +27,35 @@ Next phase: **Phase 5 — Settings / Admin** (user management + Actions-list man
   default "open batches" sorted by start date desc, status/type/search filters), batch detail page
   (editable ingredients/steps with per-step done tracking, status/yield editing, log timeline).
   Batches are private end-to-end (list/detail/photos all owner-or-admin gated server-side).
+- **Phase 5**: Settings page replaced with a tabbed Users/Actions admin UI —
+  `client/src/features/users/{types,api,hooks,CreateUserDialog,EditUserDialog,ResetPasswordDialog,
+  UsersManager}` and extended `client/src/features/actions/{api,hooks}` +
+  `{CreateActionDialog,EditActionDialog,ActionsManager}`. Added shadcn `tabs`/`dialog`/`switch`
+  primitives. Verified (browser + curl): non-admins are redirected client-side away from `/settings`
+  and get `403` from `/api/users`; deactivating a user immediately invalidates that user's *existing*
+  session (401 on next request, no re-login needed) via `requireAuth`'s per-request `isActive` check.
+- **Phase 6**: Responsive pass (mobile hamburger nav in `AppShell`, ingredient-row grids stack on mobile,
+  dialogs scroll on short viewports), accessibility pass (skip-to-content link, `aria-disabled` on the
+  Cellar Inventory placeholder, verified `NavLink`'s built-in `aria-current`), empty/loading/error-state
+  audit (new shared `ErrorState` component + `isError`/`refetch` wired into every list/detail page, plus a
+  top-level `ErrorBoundary`), first automated test suite (`server`: Vitest + supertest, 26 tests covering
+  auth/CSRF/ownership; `client`: Vitest + Testing Library harness with smoke tests), route-level
+  code-splitting (`React.lazy` per page) which resolved the bundle-size warning, and deployment artifacts
+  (`deploy/nginx/brewlog.conf`, `deploy/systemd/brewlog-api.service`, full runbook in README.md).
 - All phases verified via curl (auth/ownership edge cases) **and** live browser testing (login flows,
-  CRUD, privacy checks, filters).
+  CRUD, privacy checks, filters, and - for Phase 6 - mobile-viewport nav/form rendering).
 
 ## Not completed
-- **Phase 5**: Settings page is still a placeholder (`client/src/pages/SettingsPage.tsx`). No UI yet for
-  admin user management (create/edit role/activate/reset password) or Actions-list management
-  (add/edit/deactivate/reorder). Backend APIs for both already exist (Phase 1) and just need a frontend.
-- **Phase 6**: No responsive/accessibility pass, no empty/loading/error-state audit, no production nginx
-  config or systemd unit, no automated tests (Vitest+supertest) yet.
 - **Phase 7**: Cellar Inventory — planning only, not built (disabled nav placeholder already in AppShell).
 - Minor known issue: a benign console 404 can appear briefly after deleting a recipe/batch (a
   React Query background refetch of the just-invalidated detail query racing the navigation away) —
   cosmetic only, not a functional bug.
-- Client bundle exceeds Vite's 500kB warning threshold — deferred to Phase 6 (code-splitting).
+- The Phase 6 deployment runbook (README.md "Deployment") was written and cross-checked against the app's
+  actual proxy/env/systemd requirements, but has not been executed end-to-end against a real clean
+  VM/container in this session - worth a dry run before the first real production deploy.
+- No Lighthouse CI numbers were captured (no headless Lighthouse tooling available in this session); the
+  responsive/accessibility changes were verified via the integrated browser tool at 375px/1280px widths and
+  a manual review of ARIA/contrast, not an automated Lighthouse score.
 
 ## Architecture
 - **Frontend**: React 18 + TypeScript + Vite, shadcn/ui (Radix + Tailwind v4), React Router v6, TanStack
@@ -54,23 +70,29 @@ Next phase: **Phase 5 — Settings / Admin** (user management + Actions-list man
 - **Dev proxy**: Vite dev server proxies `/api` → `http://localhost:4000` so cookies behave identically
   in dev and prod (both same-origin from the browser's perspective; prod is nginx reverse-proxying to the
   same Node process).
-- **Deployment target** (not yet built — Phase 6): nginx serves the built client + reverse-proxies `/api`;
-  Node API runs via systemd. No Docker.
+- **Deployment**: nginx serves the built client + reverse-proxies `/api`; Node API runs via systemd. No
+  Docker. Templates in `deploy/nginx/brewlog.conf` and `deploy/systemd/brewlog-api.service`; full runbook
+  in README.md "Deployment" (Phase 6).
 
 ## Important files
 - `brewlog_plan.md` — master plan: full data model, authorization rules, security notes, phase index.
-- `brewlog_plan_phase5_settings_admin.md` — exact scope/tasks/verification for the next phase.
+- `brewlog_plan_phase7_cellar_inventory.md` — planning doc for the next phase (not yet built).
 - `server/src/db/schema.ts` — Drizzle schema for all tables (source of truth for data model).
-- `server/src/middleware/auth.ts` — `requireAuth`, `requireAdmin`, `requireOwnerOrAdmin` (reuse pattern
-  for Phase 5's admin-only routes/pages).
-- `server/src/routes/users.routes.ts` and `server/src/routes/actions.routes.ts` — backend already done for
-  Phase 5; frontend just needs to consume these.
-- `client/src/pages/SettingsPage.tsx` — current placeholder to replace.
-- `client/src/features/recipes/` and `client/src/features/batches/` — reference implementations of the
-  `{types,api,hooks}` + form pattern to replicate for a new `features/users/` and `features/actions/`
-  (actions read-only hook already exists at `client/src/features/actions/hooks.ts` — extend, don't
-  duplicate).
-- `client/src/auth/route-guards.tsx` — `RequireAdmin` already wraps the `/settings` route in `App.tsx`.
+- `server/src/middleware/auth.ts` — `requireAuth`, `requireAdmin`, `requireOwnerOrAdmin`.
+- `server/src/routes/users.routes.ts` and `server/src/routes/actions.routes.ts` — admin Users/Actions
+  backend (Phase 1), consumed by the Phase 5 frontend.
+- `client/src/pages/SettingsPage.tsx` — tabbed Users/Actions admin page (Phase 5).
+- `client/src/features/recipes/`, `client/src/features/batches/`, `client/src/features/users/`,
+  `client/src/features/actions/` — reference `{types,api,hooks}` + form/dialog pattern for any future
+  feature module.
+- `client/src/auth/route-guards.tsx` — `RequireAdmin` wraps the `/settings` route in `App.tsx`.
+- `server/src/test/{setup,helpers}.ts` + `server/vitest.config.ts` — backend test harness (isolated
+  in-memory SQLite per test file, login/CSRF helpers) - copy this pattern for any new backend test file.
+- `client/vitest.config.ts` + `client/src/test/setup.ts` — frontend test harness (jsdom + Testing Library).
+- `client/src/components/{ErrorState,ErrorBoundary}.tsx` — shared query-error and render-error UI; wire
+  `ErrorState` into any new list/detail page's `isError` branch rather than only checking `isLoading`/`data`.
+- `deploy/nginx/brewlog.conf`, `deploy/systemd/brewlog-api.service` — deployment config templates;
+  README.md "Deployment" has the full runbook.
 
 ## Conventions
 - Every package has its own `eslint.config.js`; `@typescript-eslint/no-unused-vars` ignores `^_`-prefixed
@@ -89,6 +111,16 @@ Next phase: **Phase 5 — Settings / Admin** (user management + Actions-list man
   `sqlite.transaction()`, not diffed.
 - Ownership checks: `requireOwnerOrAdmin(loadOwnerId)` middleware factory — write a small
   `loadXOwnerId(req)` for any new owned resource rather than inlining checks in route handlers.
+- Backend tests: put new test files under `server/src/test/*.test.ts`; import `createApp` from `app.ts`
+  and use `createUser`/`loginAs`/`getCsrfToken` from `server/src/test/helpers.ts` to get an authenticated
+  `supertest` agent with a valid CSRF token already primed. Each test file gets its own fresh in-memory DB
+  (migrated by `server/src/test/setup.ts`) — no manual cleanup needed between test files.
+- Frontend list/detail pages: destructure `isError`/`error`/`refetch` from the `useQuery` result (not just
+  `isLoading`/`data`) and render `<ErrorState message={...} onRetry={...} />` — don't let a failed fetch
+  fall through to a misleading "not found" message.
+- New pages should be added to `App.tsx` via `lazy(() => import('@/pages/Foo').then((m) => ({ default:
+  m.Foo })))` (named export, not default) rather than a static top-level import, to keep route-level
+  code-splitting working as the app grows.
 - Commit messages follow `Phase N: <summary>`; each phase's `brewlog_plan_phaseN_*.md` file is updated
   (checkboxes + a short verification/notes section) as part of that phase's commit.
 - Repo-scoped conventions and gotchas (shadcn CLI alias quirk, RHF/zod generic fix, etc.) are also saved in
@@ -96,25 +128,19 @@ Next phase: **Phase 5 — Settings / Admin** (user management + Actions-list man
   it; this handoff file is the portable, tool-agnostic version.
 
 ## Known issues
-- See "Not completed" above (cosmetic delete-refetch 404, bundle size warning) — nothing blocking.
+- See "Not completed" above (cosmetic delete-refetch 404, unexecuted-on-a-real-VM runbook, no captured
+  Lighthouse numbers) — nothing blocking.
 - Dev-only transitive vulnerability in esbuild via vitest/drizzle-kit (dev server only, not shipped);
-  accepted risk, would require a vitest 5 major bump to fully clear.
+  accepted risk, would require a vitest 5 major bump to fully clear. The client's new Vitest devDependency
+  has the same accepted esbuild/vite transitive advisory for the same reason.
 
 ## Next session should read first
-1. `brewlog_plan_phase5_settings_admin.md` — exact scope for this phase.
-2. `brewlog_plan.md` — data model + authorization rules (Users/Actions sections).
-3. `server/src/routes/users.routes.ts` and `server/src/routes/actions.routes.ts` — existing backend APIs
-   to wire up.
-4. `client/src/features/recipes/` (or `batches/`) — the `{types,api,hooks}` + page pattern to replicate.
-5. `client/src/pages/SettingsPage.tsx` and `client/src/App.tsx` — where the new UI plugs in.
+1. `brewlog_plan_phase7_cellar_inventory.md` — exact scope for the next phase (currently planning-only).
+2. `brewlog_plan.md` — full data model + authorization rules.
+3. This handoff's Architecture/Conventions sections below.
 
 ## Next phase goal
-Implement Phase 5 — Settings / Admin UI (backend already complete):
-- `features/users/` (types, api, hooks) consuming the existing admin Users endpoints.
-- `features/actions/` — extend the existing read hook with admin create/update (deactivate/reorder).
-- Settings page with two tabs: **Users** (list, create, edit role/active, reset password) and
-  **Actions** (list, create, edit, deactivate/reorder, `applicableTo` field).
-- Confirm `RequireAdmin` guard already covers `/settings` (it does) — just build the page content.
-- Verify: non-admins can't reach Settings via direct URL or API (already enforced server-side; confirm
-  client-side UX matches), and deactivating a user immediately blocks that user's next authenticated
-  request (session lookup in `requireAuth` already checks `isActive` — verify end-to-end).
+Phase 7 — Cellar Inventory: flesh out the planning doc into an implementation plan, then build it
+(data model, API, and UI) following the same `{types,api,hooks}` + form/dialog conventions as the
+recipes/batches/users/actions features. Before starting, consider doing a real dry-run of the Phase 6
+deployment runbook against a clean VM/container, since that was written but not executed end-to-end.

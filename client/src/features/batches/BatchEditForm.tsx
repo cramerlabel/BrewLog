@@ -134,16 +134,16 @@ export function BatchEditForm({ defaultValues, onSubmit, onCancel, isSubmitting 
         )}
         <div className="space-y-3">
           {ingredientsArray.fields.map((field, index) => (
-            <div key={field.id} className="grid grid-cols-12 items-start gap-2 rounded-md border p-3">
-              <div className="col-span-3 space-y-1">
+            <div key={field.id} className="grid grid-cols-2 items-start gap-2 rounded-md border p-3 sm:grid-cols-12">
+              <div className="col-span-2 space-y-1 sm:col-span-3">
                 <Label className="text-xs text-muted-foreground">Category</Label>
                 <Input {...register(`ingredients.${index}.category`)} />
               </div>
-              <div className="col-span-3 space-y-1">
+              <div className="col-span-2 space-y-1 sm:col-span-3">
                 <Label className="text-xs text-muted-foreground">Name</Label>
                 <Input {...register(`ingredients.${index}.name`)} />
               </div>
-              <div className="col-span-2 space-y-1">
+              <div className="col-span-1 space-y-1 sm:col-span-2">
                 <Label className="text-xs text-muted-foreground">Amount</Label>
                 <Input
                   type="number"
@@ -151,15 +151,15 @@ export function BatchEditForm({ defaultValues, onSubmit, onCancel, isSubmitting 
                   {...register(`ingredients.${index}.amount`, { valueAsNumber: true })}
                 />
               </div>
-              <div className="col-span-1 space-y-1">
+              <div className="col-span-1 space-y-1 sm:col-span-1">
                 <Label className="text-xs text-muted-foreground">Unit</Label>
                 <Input {...register(`ingredients.${index}.unit`)} />
               </div>
-              <div className="col-span-2 space-y-1">
+              <div className="col-span-2 space-y-1 sm:col-span-2">
                 <Label className="text-xs text-muted-foreground">Notes</Label>
                 <Input {...register(`ingredients.${index}.notes`)} />
               </div>
-              <div className="col-span-1 flex items-end justify-end">
+              <div className="col-span-2 flex items-end justify-end sm:col-span-1">
                 <Button
                   type="button"
                   variant="ghost"

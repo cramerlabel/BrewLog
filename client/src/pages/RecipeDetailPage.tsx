@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ErrorState } from '@/components/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { recipesApi } from '@/features/recipes/api';
@@ -27,11 +28,19 @@ export function RecipeDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const { data, isLoading } = useRecipe(recipeId);
+  const { data, isLoading, isError, error, refetch } = useRecipe(recipeId);
   const deleteRecipe = useDeleteRecipe();
 
   if (isLoading) {
     return <Skeleton className="h-96 max-w-3xl rounded-lg" />;
+  }
+  if (isError) {
+    return (
+      <ErrorState
+        message={error instanceof ApiError ? error.message : 'Failed to load this recipe.'}
+        onRetry={() => void refetch()}
+      />
+    );
   }
   if (!data) {
     return <p className="text-muted-foreground">Recipe not found.</p>;

@@ -4,15 +4,17 @@ import { recipesApi } from '@/features/recipes/api';
 import { useRecipes } from '@/features/recipes/hooks';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ErrorState } from '@/components/ErrorState';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ApiError } from '@/lib/api-client';
 
 export function RecipesPage() {
   const [search, setSearch] = useState('');
   const [type, setType] = useState<'all' | 'beer' | 'wine'>('all');
 
-  const { data: recipes, isLoading } = useRecipes({
+  const { data: recipes, isLoading, isError, error, refetch } = useRecipes({
     search: search || undefined,
     type: type === 'all' ? undefined : type,
   });
@@ -53,11 +55,18 @@ export function RecipesPage() {
         </div>
       )}
 
-      {!isLoading && recipes?.length === 0 && (
+      {isError && (
+        <ErrorState
+          message={error instanceof ApiError ? error.message : 'Failed to load recipes.'}
+          onRetry={() => void refetch()}
+        />
+      )}
+
+      {!isLoading && !isError && recipes?.length === 0 && (
         <p className="text-muted-foreground">No recipes found. Create the first one!</p>
       )}
 
-      {!isLoading && recipes && recipes.length > 0 && (
+      {!isLoading && !isError && recipes && recipes.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {recipes.map((recipe) => (
             <Link

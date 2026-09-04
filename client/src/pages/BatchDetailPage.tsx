@@ -17,6 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ErrorState } from '@/components/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { batchesApi } from '@/features/batches/api';
@@ -40,7 +41,7 @@ export function BatchDetailPage() {
   const batchId = Number(id);
   const navigate = useNavigate();
 
-  const { data, isLoading } = useBatch(batchId);
+  const { data, isLoading, isError, error, refetch } = useBatch(batchId);
   const updateBatch = useUpdateBatch(batchId);
   const deleteBatch = useDeleteBatch();
   const createLogEntry = useCreateLogEntry(batchId);
@@ -55,6 +56,14 @@ export function BatchDetailPage() {
 
   if (isLoading) {
     return <Skeleton className="h-96 max-w-3xl rounded-lg" />;
+  }
+  if (isError) {
+    return (
+      <ErrorState
+        message={error instanceof ApiError ? error.message : 'Failed to load this batch.'}
+        onRetry={() => void refetch()}
+      />
+    );
   }
   if (!data) {
     return <p className="text-muted-foreground">Batch not found.</p>;

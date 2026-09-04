@@ -4,6 +4,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/auth/AuthContext';
 import { Button } from '@/components/ui/button';
+import { ErrorState } from '@/components/ErrorState';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,13 +19,21 @@ export function EditRecipePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const { data, isLoading } = useRecipe(recipeId);
+  const { data, isLoading, isError, error, refetch } = useRecipe(recipeId);
   const updateRecipe = useUpdateRecipe(recipeId);
   const uploadPhoto = useUploadRecipePhoto(recipeId);
   const deletePhoto = useDeleteRecipePhoto(recipeId);
 
   if (isLoading) {
     return <Skeleton className="h-96 max-w-3xl rounded-lg" />;
+  }
+  if (isError) {
+    return (
+      <ErrorState
+        message={error instanceof ApiError ? error.message : 'Failed to load this recipe.'}
+        onRetry={() => void refetch()}
+      />
+    );
   }
   if (!data) {
     return <p className="text-muted-foreground">Recipe not found.</p>;

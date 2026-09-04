@@ -124,16 +124,16 @@ export function RecipeForm({ defaultValues, onSubmit, isSubmitting, submitLabel 
 
         <div className="space-y-3">
           {ingredientsArray.fields.map((field, index) => (
-            <div key={field.id} className="grid grid-cols-12 items-start gap-2 rounded-md border p-3">
-              <div className="col-span-3 space-y-1">
+            <div key={field.id} className="grid grid-cols-2 items-start gap-2 rounded-md border p-3 sm:grid-cols-12">
+              <div className="col-span-2 space-y-1 sm:col-span-3">
                 <Label className="text-xs text-muted-foreground">Category</Label>
                 <Input placeholder="grain, hop, yeast…" {...register(`ingredients.${index}.category`)} />
               </div>
-              <div className="col-span-3 space-y-1">
+              <div className="col-span-2 space-y-1 sm:col-span-3">
                 <Label className="text-xs text-muted-foreground">Name</Label>
                 <Input {...register(`ingredients.${index}.name`)} />
               </div>
-              <div className="col-span-2 space-y-1">
+              <div className="col-span-1 space-y-1 sm:col-span-2">
                 <Label className="text-xs text-muted-foreground">Amount</Label>
                 <Input
                   type="number"
@@ -141,15 +141,15 @@ export function RecipeForm({ defaultValues, onSubmit, isSubmitting, submitLabel 
                   {...register(`ingredients.${index}.amount`, { valueAsNumber: true })}
                 />
               </div>
-              <div className="col-span-1 space-y-1">
+              <div className="col-span-1 space-y-1 sm:col-span-1">
                 <Label className="text-xs text-muted-foreground">Unit</Label>
                 <Input {...register(`ingredients.${index}.unit`)} />
               </div>
-              <div className="col-span-2 space-y-1">
+              <div className="col-span-2 space-y-1 sm:col-span-2">
                 <Label className="text-xs text-muted-foreground">Notes</Label>
                 <Input {...register(`ingredients.${index}.notes`)} />
               </div>
-              <div className="col-span-1 flex items-end justify-end">
+              <div className="col-span-2 flex items-end justify-end sm:col-span-1">
                 <Button
                   type="button"
                   variant="ghost"
@@ -161,12 +161,12 @@ export function RecipeForm({ defaultValues, onSubmit, isSubmitting, submitLabel 
                 </Button>
               </div>
               {errors.ingredients?.[index]?.category && (
-                <p className="col-span-12 text-sm text-destructive">
+                <p className="col-span-2 text-sm text-destructive sm:col-span-12">
                   {errors.ingredients[index]?.category?.message}
                 </p>
               )}
               {errors.ingredients?.[index]?.name && (
-                <p className="col-span-12 text-sm text-destructive">{errors.ingredients[index]?.name?.message}</p>
+                <p className="col-span-2 text-sm text-destructive sm:col-span-12">{errors.ingredients[index]?.name?.message}</p>
               )}
             </div>
           ))}

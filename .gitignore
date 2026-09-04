@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 build/
+*.tsbuildinfo
 
 # Environment variables / secrets
 .env
@@ -19,6 +20,9 @@ build/
 # Uploaded user content (photos)
 server/uploads/*
 !server/uploads/.gitkeep
+
+# Test-only upload dir created by the server test suite (UPLOADS_DIR=./test-uploads)
+server/test-uploads/
 
 # Logs
 *.log
