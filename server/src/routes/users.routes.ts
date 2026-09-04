@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { Router } from 'express';
 import { hashPassword } from '../auth/password.js';
 import { db } from '../db/client.js';
+import { now } from '../db/now.js';
 import { users } from '../db/schema.js';
 import { requireAdmin, requireAuth } from '../middleware/auth.js';
 
@@ -66,7 +67,7 @@ router.patch('/:id', (req, res) => {
 
   const updated = db
     .update(users)
-    .set({ ...parsed.data, updatedAt: new Date().toISOString() })
+    .set({ ...parsed.data, updatedAt: now() })
     .where(eq(users.id, id))
     .returning()
     .get();
@@ -95,7 +96,7 @@ router.post('/:id/reset-password', (req, res) => {
     .then((passwordHash) => {
       const updated = db
         .update(users)
-        .set({ passwordHash, updatedAt: new Date().toISOString() })
+        .set({ passwordHash, updatedAt: now() })
         .where(eq(users.id, id))
         .returning()
         .get();

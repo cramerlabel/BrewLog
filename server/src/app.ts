@@ -8,6 +8,7 @@ import { env } from './env.js';
 import { csrfProtection } from './middleware/csrf.js';
 import actionsRoutes from './routes/actions.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import recipesRoutes from './routes/recipes.routes.js';
 import usersRoutes from './routes/users.routes.js';
 
 export function createApp() {
@@ -46,6 +47,7 @@ export function createApp() {
   app.use('/api/auth', authRoutes);
   app.use('/api/users', usersRoutes);
   app.use('/api/actions', actionsRoutes);
+  app.use('/api/recipes', recipesRoutes);
 
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error(err);

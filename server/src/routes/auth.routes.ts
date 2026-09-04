@@ -4,6 +4,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { hashPassword, verifyPassword } from '../auth/password.js';
 import { db } from '../db/client.js';
+import { now } from '../db/now.js';
 import { users } from '../db/schema.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -90,7 +91,7 @@ router.patch('/me', requireAuth, (req, res) => {
 
   const updated = db
     .update(users)
-    .set({ displayName: parsed.data.displayName, updatedAt: new Date().toISOString() })
+    .set({ displayName: parsed.data.displayName, updatedAt: now() })
     .where(eq(users.id, req.user!.id))
     .returning()
     .get();
@@ -126,7 +127,7 @@ router.post('/change-password', requireAuth, (req, res) => {
       }
       return hashPassword(parsed.data.newPassword).then((passwordHash) => {
         db.update(users)
-          .set({ passwordHash, updatedAt: new Date().toISOString() })
+          .set({ passwordHash, updatedAt: now() })
           .where(eq(users.id, user.id))
           .run();
         res.json({ ok: true });
